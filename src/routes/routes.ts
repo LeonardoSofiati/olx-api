@@ -3,6 +3,7 @@ import {privateRoute} from '../config/passport';
 import * as UserController from '../controllers/UserController';
 import * as AuthController from '../controllers/AuthController';
 import * as AdsController from '../controllers/AdsController';
+import * as AuthValidator from '../validators/AuthValidator'
 
 const router = Router();
 
@@ -10,8 +11,8 @@ router.get('/ping', UserController.ping)
 
 router.get('/states', privateRoute, UserController.getStates);
 
-router.post('/user/signin', AuthController.signin);
-router.post('/user/signup', AuthController.signup);
+router.post('/user/signin', AuthValidator.signin, AuthController.signin);
+router.post('/user/signup', AuthValidator.signup, AuthController.signup);
 
 router.post('/user/me', privateRoute, UserController.info);
 router.post('/user/me', privateRoute, UserController.editAction);

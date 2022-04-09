@@ -3,10 +3,10 @@ import { sequelize } from "../instances/pg";
 
 export interface UserInstance extends Model {
     id: number,
-    // name: string,
+    name: string,
     email: string,
     password: string
-    // state: string,
+    state: string,
     // passwordHash: string,
     // token: string
 }
@@ -16,23 +16,20 @@ export const User = sequelize.define<UserInstance>('User', {
         primaryKey: true,
         autoIncrement: true,
         type: DataTypes.INTEGER
+    },
+    name: {
+        type: DataTypes.STRING
     }
-    // ,
-    // name: {
-    //     type: DataTypes.STRING
-    // }
     ,
     email: {
         type: DataTypes.STRING
     },
     password: {
         type: DataTypes.STRING
+    },
+    state: {
+        type: DataTypes.STRING
     }
-    // ,
-    // state: {
-    //     type: DataTypes.STRING
-    // }
-    // ,
     // passwordHash: {
     //     type: DataTypes.STRING
     // }
