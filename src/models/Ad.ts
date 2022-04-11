@@ -3,14 +3,15 @@ import { sequelize } from "../instances/pg";
 
 export interface AdInstance extends Model {
     id: number,
-    idUser: number,
+    iduser: string,
     state: string,
-    category: string,
-    images: {url: string, default: boolean} [],
-    dateCreated: Date,
+    category: number,
+    // images: {url: string, default: boolean} [],
+    image: [],
+    datecreated: Date,
     title: string,
     price: number,
-    priceNegotiable: boolean,
+    pricenegotiable: boolean,
     description: string,
     view: number,
     status: string
@@ -22,19 +23,19 @@ export const Ad = sequelize.define<AdInstance>('Ad', {
         autoIncrement: true,
         type: DataTypes.INTEGER
     },
-    idUser: {
-        type: DataTypes.INTEGER
+    iduser: {
+        type: DataTypes.STRING
     },
     state: {
         type: DataTypes.STRING
     },
     category: {
+        type: DataTypes.INTEGER
+    },
+    image: {
         type: DataTypes.STRING
     },
-    images: {
-        type: DataTypes.ARRAY
-    },
-    dateCreated: {
+    datecreated: {
         type: DataTypes.DATE
     },
     title: {
@@ -43,7 +44,7 @@ export const Ad = sequelize.define<AdInstance>('Ad', {
     price: {
         type: DataTypes.INTEGER
     },
-    priceNegotiable: {
+    pricenegotiable: {
         type: DataTypes.BOOLEAN
     },
     description: {

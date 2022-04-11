@@ -14,8 +14,8 @@ router.get('/states', privateRoute, UserController.getStates);
 router.post('/user/signin', AuthValidator.signin, AuthController.signin);
 router.post('/user/signup', AuthValidator.signup, AuthController.signup);
 
-router.post('/user/me', privateRoute, UserController.info);
-router.post('/user/me', privateRoute, UserController.editAction);
+router.get('/user/me', AuthValidator.userInfo ,privateRoute, UserController.info);
+router.put('/user/me', privateRoute, UserController.editAction);
 
 router.get('/categories', AdsController.getCategories);
 

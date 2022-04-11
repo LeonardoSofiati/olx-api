@@ -41,3 +41,10 @@ export const signin = checkSchema({
         errorMessage: 'Senha precisa ter pelo menos 5 caracteres'
     }
 })
+
+export const userInfo = checkSchema({
+    token: {
+        notEmpty: true,
+        errorMessage: 'Token não enviado'
+    }
+})

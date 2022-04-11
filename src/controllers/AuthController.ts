@@ -1,7 +1,7 @@
 import {Request, Response} from 'express';
-import { User } from '../models/User';
 import { generateToken } from '../config/passport';
 import { validationResult, matchedData } from 'express-validator';
+import * as userService from '../services/userService';
 
 export const signin = async (req: Request, res: Response) => {
     const errors = validationResult(req);
@@ -9,15 +9,12 @@ export const signin = async (req: Request, res: Response) => {
         let email: string = req.body.email;
         let password: string = req.body.password;
 
-        let user = await User.findOne({
-            where: {email, password}
-        });
+        let user = await userService.findByEmail(email);
 
-        let data = matchedData(req);
+        if(user && userService.matchPassword(password, user.password)) {
+            let data = matchedData(req);
 
-        if(user) {
-            const token = generateToken({id: user.id})
-            return res.json({status: true, token, data});
+            return res.json({status: true, user, data});
         } else {
             return res.json({status: 'E-mail ou senha invalidos'})
         }
@@ -31,19 +28,21 @@ export const signup = async (req: Request, res: Response) => {
     if(errors.isEmpty()) {
         let {email, password, name, state} = req.body;
 
-        let hasUser = await User.findOne({ where: { email}});
+        const token = generateToken({email: email});
 
-        if(!hasUser) {
-            let newUser = await User.create({email, password, name, state});
-            const token = generateToken({id: newUser.id});
+        const newUser = await userService.createUser(email, password, name, state, token);
+
+        if(newUser instanceof Error) {
+            return res.json({error: newUser.message});
+
+        } else if (newUser) {
 
             let data = matchedData(req);
 
             res.status(201);
             return res.json({id: newUser.id, token, success: true, data});
-        } else {
-            return res.json({error: 'E-mail já existente'});
         }
+
     } else {
         return res.json({error: errors.mapped()});
     }
