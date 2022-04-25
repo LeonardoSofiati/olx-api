@@ -7,14 +7,14 @@ export interface AdInstance extends Model {
     state: string,
     category: number,
     // images: {url: string, default: boolean} [],
-    image: [],
+    image: string,
     datecreated: Date,
     title: string,
     price: number,
     pricenegotiable: boolean,
     description: string,
     view: number,
-    status: string
+    status: boolean
 }
 
 export const Ad = sequelize.define<AdInstance>('Ad', {
@@ -54,8 +54,8 @@ export const Ad = sequelize.define<AdInstance>('Ad', {
         type: DataTypes.INTEGER
     },
     status: {
-        type: DataTypes.STRING
-    }
+        type: DataTypes.BOOLEAN
+    },
 }, {
     tableName: 'ads',
     timestamps: false

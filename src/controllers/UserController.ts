@@ -1,9 +1,5 @@
 import { Request, Response } from 'express';
-import { Op, Sequelize } from "sequelize";
 import { State } from '../models/State';
-import { User } from '../models/User';
-import { Ad } from '../models/Ad';
-import { Category } from '../models/Category';
 import * as userService from '../services/userService';
 import { validationResult, matchedData } from 'express-validator';
 
@@ -28,9 +24,27 @@ export const info = async (req: Request, res: Response) => {
         } else if(userDetails) {
             return res.json({user: userDetails})
         }
+    } else {
+        return res.json({status: errors.mapped()})
     }
 }
 
 export const editAction = async (req: Request, res: Response) => {
-    res.json({ res: 'editAction' })
+    const errors = validationResult(req)
+    if(errors.isEmpty()) {
+        let {token, email, password, name, state} = req.body;
+
+        const editedDetails = await userService.editUserDetails(token, email, password, name, state);
+
+        if(editedDetails instanceof Error) {
+            return res.json({error: editedDetails.message})
+        } else if(editedDetails) {
+            return res.json({edited: editedDetails, status: 'sucesso'})
+        }
+
+        const data = matchedData(req)
+        res.json({ res: 'editAction' })
+    } else  {
+        return res.json({status: errors.mapped()})
+    }
 }

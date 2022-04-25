@@ -4,8 +4,7 @@ import router from '../src/routes/routes'
 import dotenv from 'dotenv';
 import cors from 'cors';
 import passport from 'passport';
-import fileupload from 'express-fileupload';
-
+import { MulterError } from 'multer';
 
 dotenv.config();
 
@@ -16,7 +15,6 @@ server.use(cors());
 server.use(express.static(path.join(__dirname, '../public')));
 server.use(express.urlencoded({extended: true}));
 server.use(express.json());
-server.use(fileupload());
 
 server.use(passport.initialize());
 
@@ -38,6 +36,12 @@ const errorHandler: ErrorRequestHandler = (err, req, res, next) => {
         res.json({error: err.message});
     } else {
         res.json({error: 'Ocorreu algum erro, contate o suporte'})
+    }
+    if(err instanceof MulterError) {
+        res.json({
+            error: err.code,
+            message: err.message
+        })
     }
 }
 

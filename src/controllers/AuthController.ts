@@ -28,10 +28,8 @@ export const signup = async (req: Request, res: Response) => {
     if(errors.isEmpty()) {
         let {email, password, name, state} = req.body;
 
-        const token = generateToken({email: email});
-
-        const newUser = await userService.createUser(email, password, name, state, token);
-
+        const newUser = await userService.createUser(email, password, name, state);
+        
         if(newUser instanceof Error) {
             return res.json({error: newUser.message});
 
@@ -40,7 +38,7 @@ export const signup = async (req: Request, res: Response) => {
             let data = matchedData(req);
 
             res.status(201);
-            return res.json({id: newUser.id, token, success: true, data});
+            return res.json({newUser, success: true, data});
         }
 
     } else {

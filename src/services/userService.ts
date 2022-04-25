@@ -5,9 +5,9 @@ import bcrypt from 'bcrypt';
 import { generateToken } from '../config/passport';
 import { Ad } from "../models/Ad";
 
-export const createUser = async (email: string, password: string, name: string, state: string, token: string) => {
+export const createUser = async (email: string, password: string, name: string, state: string) => {
     //Encriptando a senha
-    const hash = bcrypt.hashSync(password, 10);
+    const hash: string = bcrypt.hashSync(password, 10);
 
     //Verificando se usuário/e-mail já está cadastrado
     let hasUser = await User.findOne({ where: { email } });
@@ -17,9 +17,16 @@ export const createUser = async (email: string, password: string, name: string, 
 
     //Se não tiver usuario já cadastrado com esse email e o estado existir no BD, então sucesso e cria
     if (!hasUser && hasState) {
-        let newUser = await User.create({ email, password: hash, name, state, token });
+        let newUser = await User.create({ email, password: hash, name, state});
+        const token = generateToken({ id: newUser?.id });
 
-        if (newUser) {
+        let newUserToken = await User.update({ token: token }, {
+            where: {
+                id: newUser?.id
+            }
+        })
+
+        if (newUser && newUserToken) {
             return newUser;
         }
 
@@ -55,9 +62,8 @@ export const findByEmail = async (email: string) => {
     return user
 }
 
-export const matchPassword = async (passwordBruto: string, passwordHash: string) => {
+export const matchPassword = (passwordBruto: string, passwordHash: string) => { //tive que retirar o async dessa função para comparar a senha na editUserDetails(), se atentar
     const passwordCorrect = bcrypt.compareSync(passwordBruto, passwordHash);
-
     return passwordCorrect
 }
 
@@ -76,14 +82,6 @@ export const findUserDetails = async (token: string) => {
 
         const checkAds = () => {
             if (ads.length > 0) {
-                ads.forEach ( async (element) => {
-                    const adCategory = await Category.findOne({where: {id: element.category}})
-                    ads.map((element) => {//pensar em como adicionar o nome da categoria disponivel na tabela "Category" através da coluna "category" da tabela Ads que contém o ID da categoria em sí
-                        
-                    })
-
-                    console.log('adCategory', adCategory?.name)
-                });
                 return ads;
             } else {
                 return 'Nenhuma promoção vinculada'
@@ -99,5 +97,50 @@ export const findUserDetails = async (token: string) => {
         return userDetails
     } else {
         return new Error('Usuário não encontrado')
+    }
+}
+
+export const editUserDetails = async (token: string, email: string, password: string, name: string, state: string) => {
+    const userByToken = await User.findOne({ where: { token } })
+
+    //checa ali em cima se o Token recebido bate com o token desse usuario cadastrado no banco, se bater, realiza as alterações, se não, retorna erro
+    if (userByToken) {
+        //checa se o e-mail a ser alterado já está cadastrado, se tiver, retorna erro, se não, altera
+        if(email) {
+            const emailCheck = await User.findOne({where:{email}});
+            if(emailCheck) {
+                return new Error('E-mail já cadastrado')
+            }
+        }
+
+        //checa se o estado a ser alterado está presente na lista de estados cadastrados na State, se não estiver, da erro
+        if(state){
+            const stateCheck = await State.findOne({where: {name: state}});
+            if(!stateCheck) {
+                return new Error('Estao invalido')
+            }
+        }
+
+        //checa se a senha que o usuário está mudando é a mesma que já está cadastrada, se for, não deixa alterar, se não for, gera um hash novo e altera o hash em si no banco, e não a senha pura, se não da falha no login pois ele vai comparar o hash antigo com a senha pura nova
+        //antes de fazer a verificação, ele compara com o matchPassword() criada acima e compara a senha bruta recebida do front e a senha com hash do banco
+        let hash:string | undefined = undefined;
+        if(password) {
+            let matchedSenha: boolean = matchPassword(password, userByToken.password)
+
+            if(matchedSenha == true) {
+                return new Error('Você não pode trocar a senha pela mesma usada anteriormente')
+            } else {
+                hash = bcrypt.hashSync(password, 10);
+            }
+        }
+
+        await User.update({ name, email, password: hash, state }, {
+            where: {
+                token: userByToken.token
+            }
+        })
+        return userByToken
+    } else {
+        return new Error('Usuário não encontrado/token não permitido')
     }
 }

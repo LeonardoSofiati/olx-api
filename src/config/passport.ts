@@ -21,6 +21,7 @@ passport.use(new JWTStrategy(option, async (payload, done) => {
         return done(null, user);
     } else {
         return done(notAuthorizedJson, false);
+
     }
 }))
 
