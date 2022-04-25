@@ -163,23 +163,85 @@ export const adItem = async (id: number, other: 'true' | 'false') => {
 }
 
 export const changeAds = async (id:number, token: string, title: string, price: number, pricenegotiable: boolean, description: string, category: string, imageUrl: any) => {
-    const adToBeChanged = await Ad.findByPk(id);
-    const userId = await User.findOne({
-        where: {
-            token
-        }
-    })
+    let adToBeChanged= null;
+    let userId = null;
 
-    if(adToBeChanged?.iduser === userId?.id) {
-        //aqui pode alterar o anuncio pois o usuario so pode alterar o proprio anuncio
-    } else {
-        //aqui não deixa alterar o anuncio se não for o mesmo usuario que criou
+    try{
+        adToBeChanged = await Ad.findByPk(id);   
+
+        userId = await User.findOne({
+            where: {
+                token
+            }
+        })
+    } catch(err) {
+        return new Error(`Erro ao encontrar o anúncio: ${err}`)
     }
 
     console.log('adToBeChanged', adToBeChanged?.iduser);
     console.log('userId', userId?.id)
 
-    if (adToBeChanged) {
+    if (adToBeChanged?.iduser === userId?.id) {
+        //aqui pode alterar o anuncio pois o usuario so pode alterar o proprio anuncio
+
+        const filters: any = {
+            where: {
+                [Op.and]:
+                    [{ status: true }]
+            },
+            order: [['price', sort]],
+            offset,
+            limit
+        };
+    
+        if (title) {
+            filters.where[Op.and].push({
+                [Op.or]: [
+                    {
+                        title: {
+                            [Op.iLike]: `%${search}%` || `%${search}` || `${search}%`
+                        }
+                    },
+                    {
+                        description: {
+                            [Op.iLike]: `%${search}%` || `%${search}` || `${search}%`
+                        }
+                    }
+                ]
+            })
+        }
+    
+        if (price) {
+            filters.where[Op.and].push({
+                price
+            })
+        }
+    
+        if (pricenegotiable) {
+            filters.where[Op.and].push({
+                pricenegotiable
+            })
+        }
+
+        if (pricenegotiable) {
+            filters.where[Op.and].push({
+                pricenegotiable
+            })
+        }
+
+        if (description) {
+            filters.where[Op.and].push({
+                description
+            })
+        }
+
+        if (imageUrl) {
+            filters.where[Op.and].push({
+                imageUrl
+            })
+        }
+    
+        let adList = await Ad.findAll(filters);
 
         return adToBeChanged
         // const changedAd = await Ad.create({
@@ -200,6 +262,7 @@ export const changeAds = async (id:number, token: string, title: string, price: 
         //     return adToBeChanged
         // }
     } else {
-        return new Error('Token invalido')
+        //aqui não deixa alterar o anuncio se não for o mesmo usuario que criou
+        return new Error('Token ou anuncio inexistentes')
     }
 }
