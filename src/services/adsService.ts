@@ -126,15 +126,15 @@ export const adItem = async (id: number, other: 'true' | 'false') => {
         }
 
         let adDetails: adDetailsType = {
-                infos: [
-                    { adInfo: adItem }, 
-                    {
-                        userOwnder: {
-                            name: userOwner?.name,
-                            email: userOwner?.email
-                        }
+            infos: [
+                { adInfo: adItem },
+                {
+                    userOwnder: {
+                        name: userOwner?.name,
+                        email: userOwner?.email
                     }
-                ]
+                }
+            ]
         }
 
         //encontra outros anuncios que podem ser do interesse do usuario, podemos buscar por categoria (findall() na categoria), ou por usuario criador, etc.
@@ -162,19 +162,19 @@ export const adItem = async (id: number, other: 'true' | 'false') => {
     }
 }
 
-export const changeAds = async (id:number, token: string, title: string, price: number, pricenegotiable: boolean, description: string, category: string, imageUrl: any) => {
-    let adToBeChanged= null;
+export const changeAds = async (id: number, token: string, title: string, price: number, pricenegotiable: boolean, description: string, category: string, imageUrl: any) => {
+    let adToBeChanged = null;
     let userId = null;
 
-    try{
-        adToBeChanged = await Ad.findByPk(id);   
+    try {
+        adToBeChanged = await Ad.findByPk(id);
 
         userId = await User.findOne({
             where: {
                 token
             }
         })
-    } catch(err) {
+    } catch (err) {
         return new Error(`Erro ao encontrar o anúncio: ${err}`)
     }
 
@@ -182,87 +182,83 @@ export const changeAds = async (id:number, token: string, title: string, price: 
     console.log('userId', userId?.id)
 
     if (adToBeChanged?.iduser === userId?.id) {
-        //aqui pode alterar o anuncio pois o usuario so pode alterar o proprio anuncio
+        //aqui pode alterar o anuncio pois o usuario só pode alterar o proprio anuncio
 
-        const filters: any = {
-            where: {
-                [Op.and]:
-                    [{ status: true }]
-            },
-            order: [['price', sort]],
-            offset,
-            limit
-        };
-    
-        if (title) {
-            filters.where[Op.and].push({
-                [Op.or]: [
-                    {
-                        title: {
-                            [Op.iLike]: `%${search}%` || `%${search}` || `${search}%`
-                        }
-                    },
-                    {
-                        description: {
-                            [Op.iLike]: `%${search}%` || `%${search}` || `${search}%`
-                        }
+        let changedInfos: {}[] =  []
+
+        try {
+            if (title) {
+                let newTitle = await Ad.update({ title: title }, {
+                    where: {
+                        id: adToBeChanged?.id
                     }
-                ]
-            })
-        }
-    
-        if (price) {
-            filters.where[Op.and].push({
-                price
-            })
-        }
-    
-        if (pricenegotiable) {
-            filters.where[Op.and].push({
-                pricenegotiable
-            })
+                })
+                if(newTitle) {
+                    changedInfos.push({newTitle: `Título do anuncio alterado para: "${title}" com sucesso!`}) 
+                }
+            }
+
+            if (price) {
+                let newPrice = await Ad.update({ price: price }, {
+                    where: {
+                        id: adToBeChanged?.id
+                    }
+                })
+                if(newPrice) {
+                    changedInfos.push({newPrice: `Valor do anuncio alterado para: "${price}" com sucesso!`}) 
+                }
+            }
+
+            if (pricenegotiable) {
+                let newPricenegotiable = await Ad.update({ pricenegotiable: pricenegotiable }, {
+                    where: {
+                        id: adToBeChanged?.id
+                    }
+                })
+                if(newPricenegotiable) {
+                    changedInfos.push({newPricenegotiable: `Price Negotiable do anuncio alterado para: "${pricenegotiable}" com sucesso!`}) 
+                }
+            }
+
+            if (description) {
+                let NewDescription = await Ad.update({ description: description }, {
+                    where: {
+                        id: adToBeChanged?.id
+                    }
+                })
+                if(NewDescription) {
+                    changedInfos.push({NewDescription: `Descrição do anuncio alterado para: "${description}" com sucesso!`})
+                }
+            }
+
+            if (category) {
+                let newCategory = await Ad.update({ category: category }, {
+                    where: {
+                        id: adToBeChanged?.id
+                    }
+                })
+                if(newCategory) {
+                    changedInfos.push({newCategory: `Categoria do anuncio alterado para: "${category}" com sucesso!`}) 
+                }
+            }
+
+            if (imageUrl !== null) {
+                let newImage = await Ad.update({ image: imageUrl }, {
+                    where: {
+                        id: adToBeChanged?.id
+                    }
+                })
+                if(newImage) {
+                    changedInfos.push({newImage: `Imagem do anuncio alterado para: "${imageUrl}" com sucesso!`}) 
+                }
+            }
+        } catch (e) {
+            console.log('erro na atualização do anuncio', e)
         }
 
-        if (pricenegotiable) {
-            filters.where[Op.and].push({
-                pricenegotiable
-            })
-        }
-
-        if (description) {
-            filters.where[Op.and].push({
-                description
-            })
-        }
-
-        if (imageUrl) {
-            filters.where[Op.and].push({
-                imageUrl
-            })
-        }
-    
-        let adList = await Ad.findAll(filters);
-
-        return adToBeChanged
-        // const changedAd = await Ad.create({
-        //     iduser: adToBeChanged.id,
-        //     state: adToBeChanged.state,
-        //     category,
-        //     title,
-        //     price,
-        //     pricenegotiable,
-        //     description,
-        //     datecreated: new Date(),
-        //     view: 0,
-        //     status: true,
-        //     image: imageUrl
-        // })
-
-        // if (adToBeChanged) {
-        //     return adToBeChanged
-        // }
+        return changedInfos
     } else {
         //aqui não deixa alterar o anuncio se não for o mesmo usuario que criou
-        return new Error('Token ou anuncio inexistentes')
+        return new Error('Token ou anuncio inválidos')
     }
 }

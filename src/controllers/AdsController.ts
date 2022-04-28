@@ -163,16 +163,18 @@ export const editAction = async (req: Request, res: Response) => {
         let image = req.file as  File | undefined;
 
         //pego a imagem e salvo em buffer na memoria
-        let uuidName = uuidv4();
-
-        let imageUrl = `http://localhost:3000/assets/images/${uuidName}.png`
-
-        console.log('imageUrl', imageUrl)
-        console.log('id', id)
-        console.log('token', token)
-
+        let imageUrl = null;
+        
         try {
             if(req.file) {
+                let uuidName = uuidv4();
+
+                imageUrl = `http://localhost:3000/assets/images/${uuidName}.png`
+
+                console.log('imageUrl', imageUrl)
+                console.log('id', id)
+                console.log('token', token)
+
                 await sharp(req.file.buffer).resize(500).toFile(`./public/assets/images/${uuidName}.png`);
             }
         } catch(err) {
